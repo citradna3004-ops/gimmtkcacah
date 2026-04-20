@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Bilangan Cacah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 2rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        .feedback-pop {
+            animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        #bg-music-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Element -->
+    <audio id="bgm" loop>
+        <source src="https://github.com/citradna3004-ops/mtkkls5/raw/refs/heads/main/Gold_Star_Quest.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="game-card" id="game-container">
+        <!-- Audio Control -->
+        <button id="bg-music-toggle" onclick="toggleMusic()" class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-200 transition">
+            <i id="music-icon" class="fas fa-volume-mute"></i>
+        </button>
+
+        <!-- Main Menu -->
+        <div id="menu-screen">
+            <h1 class="header-font text-4xl text-indigo-700 mb-4">🔢 Petualangan Bilangan Cacah</h1>
+            <p class="text-gray-600 mb-8">Siap mengasah kemampuan matematikamu, Penjelajah?</p>
+            <div class="space-y-4">
+                <button onclick="startGame()" class="btn-bounce w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-2xl text-xl shadow-lg transition duration-300">
+                    Mulai Bermain!
+                </button>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-blue-100 p-3 rounded-xl">
+                        <p class="font-bold text-blue-800">Kelas 5 SD</p>
+                        <p class="text-blue-600">Kurikulum Merdeka</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-xl">
+                        <p class="font-bold text-purple-800">Materi</p>
+                        <p class="text-purple-600">Bilangan Cacah</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Interface -->
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-red-500 text-2xl" id="lives-display">❤️❤️❤️</span>
+                </div>
+                <div class="text-indigo-600 font-bold">
+                    Skor: <span id="score-display">0</span>
+                </div>
+            </div>
+
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-6">
+                <div id="progress-bar" class="progress-bar bg-green-500 h-3 rounded-full" style="width: 0%"></div>
+            </div>
+
+            <div id="question-container" class="mb-8">
+                <p id="level-text" class="text-indigo-500 font-bold text-sm uppercase tracking-widest mb-2">Level 1</p>
+                <h2 id="question-text" class="text-2xl font-bold text-gray-800 mb-6">Loading soal...</h2>
+                <div id="options-grid" class="grid grid-cols-1 gap-3">
+                    <!-- Buttons will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden">
+            <div id="result-icon" class="text-7xl mb-4">🏆</div>
+            <h2 id="result-title" class="header-font text-3xl text-gray-800 mb-2">Luar Biasa!</h2>
+            <p id="result-message" class="text-gray-600 mb-6">Kamu telah menyelesaikan tantangan.</p>
+            <div class="bg-indigo-50 p-6 rounded-2xl mb-8">
+                <p class="text-gray-500">Skor Akhir Kamu:</p>
+                <p id="final-score" class="text-5xl font-bold text-indigo-600">0</p>
+            </div>
+            <button onclick="location.reload()" class="btn-bounce bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-xl shadow-md transition">
+                Main Lagi
+            </button>
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 rounded-2xl z-10 p-6">
+            <div class="text-center">
+                <div id="feedback-emoji" class="text-6xl mb-4"></div>
+                <p id="feedback-text" class="text-xl font-bold mb-4"></p>
+                <p id="explanation-text" class="text-gray-600 mb-6 italic"></p>
+                <button id="next-btn" class="bg-green-500 text-white font-bold py-2 px-8 rounded-lg">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "Lambang bilangan dari 'Dua juta tiga ratus lima puluh ribu' adalah...",
+                options: ["2.350.000", "2.035.000", "235.000", "20.350.000"],
+                correct: 0,
+                explanation: "Dua juta (2.000.000) + tiga ratus lima puluh ribu (350.000) = 2.350.000",
+                level: "Level 1: Membaca Bilangan"
+            },
+            {
+                q: "Angka 7 pada bilangan 4.721.000 menempati nilai tempat...",
+                options: ["Ratus ribuan", "Puluh ribuan", "Jutaan", "Ribuan"],
+                correct: 0,
+                explanation: "7 berada di posisi ketiga dari kiri setelah jutaan, maka nilainya 700.000 (Ratus ribuan).",
+                level: "Level 1: Nilai Tempat"
+            },
+            {
+                q: "Berapakah hasil dari 1.500.000 + 750.000?",
+                options: ["2.250.000", "2.150.000", "2.500.000", "2.050.000"],
+                correct: 0,
+                explanation: "15 + 7.5 = 22.5, jadi 2.250.000.",
+                level: "Level 2: Penjumlahan"
+            },
+            {
+                q: "Jika sebuah toko memiliki 1.000.000 stok barang dan terjual 450.000, sisanya adalah...",
+                options: ["550.000", "650.000", "450.000", "500.000"],
+                correct: 0,
+                explanation: "1.000.000 - 450.000 = 550.000.",
+                level: "Level 2: Pengurangan"
+            },
+            {
+                q: "Hasil dari 2.500 x 40 adalah...",
+                options: ["100.000", "10.000", "1.000.000", "40.000"],
+                correct: 0,
+                explanation: "25 x 4 = 100. Tambahkan tiga nol yang ada: 100.000.",
+                level: "Level 3: Perkalian"
+            },
+            {
+                q: "Sebanyak 120.000 bibit pohon dibagikan rata ke 6 desa. Tiap desa menerima...",
+                options: ["20.000 pohon", "2.000 pohon", "12.000 pohon", "60.000 pohon"],
+                correct: 0,
+                explanation: "120.000 ÷ 6 = 20.000.",
+                level: "Level 3: Pembagian"
+            },
+            {
+                q: "Hasil pembulatan 2.380.000 ke ratus ribu terdekat adalah...",
+                options: ["2.400.000", "2.300.000", "2.000.000", "2.500.000"],
+                correct: 0,
+                explanation: "Karena angka puluh ribuannya 8 (lebih dari 5), maka dibulatkan ke atas menjadi 2.400.000.",
+                level: "Level 4: Pembulatan"
+            },
+            {
+                q: "Urutkan dari yang terkecil: 1.250.000; 1.052.000; 1.502.000",
+                options: ["1.052.000 < 1.250.000 < 1.502.000", "1.502.000 < 1.250.000 < 1.052.000", "1.250.000 < 1.052.000 < 1.502.000", "1.052.000 < 1.502.000 < 1.250.000"],
+                correct: 0,
+                explanation: "Bandingkan dari nilai tempat jutaan, lalu ratus ribuan, dst.",
+                level: "Level 4: Membandingkan"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let lives = 3;
+        const bgm = document.getElementById('bgm');
+        let isMusicPlaying = false;
+
+        function toggleMusic() {
+            const icon = document.getElementById('music-icon');
+            if (isMusicPlaying) {
+                bgm.pause();
+                icon.className = "fas fa-volume-mute";
+            } else {
+                bgm.play().catch(e => console.log("Audio play blocked by browser. User must interact first."));
+                icon.className = "fas fa-volume-up";
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        function startGame() {
+            // Autoplay music when starting if not already playing
+            if (!isMusicPlaying) {
+                toggleMusic();
+            }
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('level-text').innerText = q.level;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('progress-bar').style.width = `${(currentQuestion / questions.length) * 100}%`;
+            
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-bounce bg-white border-2 border-indigo-200 hover:border-indigo-500 p-4 rounded-xl font-bold text-gray-700 transition duration-200 text-left flex items-center gap-4";
+                btn.innerHTML = `<span class="bg-indigo-100 text-indigo-600 w-8 h-8 flex items-center justify-center rounded-full text-sm">${String.fromCharCode(65 + index)}</span> ${opt}`;
+                btn.onclick = () => checkAnswer(index);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(choice) {
+            const q = questions[currentQuestion];
+            const overlay = document.getElementById('feedback-overlay');
+            const emoji = document.getElementById('feedback-emoji');
+            const feedbackText = document.getElementById('feedback-text');
+            const explanation = document.getElementById('explanation-text');
+            const nextBtn = document.getElementById('next-btn');
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('feedback-pop');
+
+            if (choice === q.correct) {
+                score += 100;
+                emoji.innerText = "🌟";
+                feedbackText.innerText = "Jawaban Benar!";
+                feedbackText.className = "text-xl font-bold mb-4 text-green-600";
+                explanation.innerText = "Hebat! Kamu paham konsepnya.";
+                document.getElementById('score-display').innerText = score;
+            } else {
+                lives--;
+                updateLives();
+                emoji.innerText = "❌";
+                feedbackText.innerText = "Ups, Kurang Tepat";
+                feedbackText.className = "text-xl font-bold mb-4 text-red-600";
+                explanation.innerText = q.explanation;
+                
+                if (lives <= 0) {
+                    nextBtn.innerText = "Lihat Hasil Akhir";
+                }
+            }
+
+            nextBtn.onclick = () => {
+                overlay.classList.add('hidden');
+                if (lives <= 0 || currentQuestion >= questions.length - 1) {
+                    showResult();
+                } else {
+                    currentQuestion++;
+                    showQuestion();
+                }
+            };
+        }
+
+        function updateLives() {
+            let lifeIcons = "";
+            for (let i = 0; i < 3; i++) {
+                lifeIcons += (i < lives) ? "❤️" : "🖤";
+            }
+            document.getElementById('lives-display').innerText = lifeIcons;
+        }
+
+        function showResult() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+
+            const title = document.getElementById('result-title');
+            const icon = document.getElementById('result-icon');
+            
+            if (score >= 700) {
+                title.innerText = "Master Bilangan Cacah!";
+                icon.innerText = "👑";
+            } else if (score >= 400) {
+                title.innerText = "Penjelajah Hebat!";
+                icon.innerText = "🥈";
+            } else {
+                title.innerText = "Ayo Belajar Lagi!";
+                icon.innerText = "📚";
+            }
+        }
+    </script>
+</body>
+</html>
